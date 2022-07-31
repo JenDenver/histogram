@@ -12,11 +12,15 @@ public:
     int make_histogram();
     float getMiddle();
     float getStdDeviation();
+    float getBinWidth(); //
+    float getMin();     //  debug
+    float getMax();        //
     std::map<qint32,qint32> *histogram;
 private:
     QList<qint32> *input;
     float min, max, middle, dispersion, std_deviation, bin_width, lower_bound, upper_bound;
-    qint32 confidence_interval, num_of_intervals, temp, size, filtered_size;
+    qint32 confidence_interval, temp, size, filtered_size;
+    const qint32 num_of_intervals;
     std::map<qint32,qint32>::iterator iter;
     void histogram_add(qint32);
 
