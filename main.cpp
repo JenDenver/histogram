@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
     QList<qint32> data;
     fileRead(p1,&data);
     int num_of_bins{10};
-    Statistic *stat = new Statistic(&data,1,num_of_bins);
+    Statistic *stat = new Statistic(&data,2,num_of_bins);
     qDebug() << stat->getMiddle() <<  stat->getStdDeviation() << "\n";
     for (int i=1;i<=num_of_bins;i++)
     {

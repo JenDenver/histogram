@@ -17,6 +17,15 @@ public:
     float getMax();        //
     std::map<qint32,qint32> *histogram;
 private:
+    void minimax();
+    void _middle();
+    void hist();
+    void disp();
+    void stdDev();
+    void _middle(float, float);
+    void disp(float, float);
+    void findConfInterval();
+    void hist(float, float);
     QList<qint32> *input;
     float min, max, middle, dispersion, std_deviation, bin_width, lower_bound, upper_bound;
     qint32 confidence_interval, temp, size, filtered_size;
