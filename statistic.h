@@ -19,19 +19,17 @@ public:
     float std_deviation();              //stdDev for input
     float filtered_std_deviation();     //stdDev for filtered input
     void  make_histogram();             //build histogram from input
-    void  filtered_histogram();         //filter input, then build histogram
+    void  filtered_histogram();         //build histogram from filtered input
     float getBinWidth();                //default binwidth = 0
-
-    float getMin(); //del!
 
 private:
     void minimax();                     //find min and max
     void findConfInterval();            //find confidence interval
     void histogram_add(qint32);         //for building histogram
     void f_histogram_add(qint32);       //for building filtered histogram
-    void dispersion();                  //for internal use, call after average()
-    void f_dispersion();                //for internal use, call after filteredAverage()
-    void f_hist();                      //for internal use, call after average, dispersion, findConfInt
+    void dispersion();                  //for internal use
+    void f_dispersion();                //for internal use
+    void f_hist();                      //for internal use
 
     qint32 confidence_interval, num_of_intervals, temp, filtered_size;
     float min, max, middle, _dispersion, stdDev, bin_width = 0, lower_bound, upper_bound;

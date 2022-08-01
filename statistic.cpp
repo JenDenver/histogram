@@ -1,6 +1,5 @@
 #include "statistic.h"
-#include <QDebug>       //del!
-#include <QTime>        //del!
+
 
 Statistic::Statistic(qint32 conf, qint32 num, QList<qint32> *data):
     confidence_interval(conf), num_of_intervals(num), input(data)
@@ -16,20 +15,16 @@ Statistic::~Statistic()
 //public methods
 float Statistic::average()
 {
-            clock_t start = clock();      //del!
     middle=0;
     for (auto x:*input)
     {
         middle+=x;
     }
     middle /= input->size();
-    clock_t finished = clock();         //del!
-    qDebug() << (double)(finished-start) << " ms";  //del!
     return middle;
 }
 float Statistic::filteredAverage()
 {
-        clock_t start = clock();      //del!
     average();
     dispersion();
     stdDev = sqrt(_dispersion);
@@ -45,23 +40,17 @@ float Statistic::filteredAverage()
     }
     assert(filtered_size>0 && "nothing in confidence interval");
     middle/=filtered_size;
-    clock_t finished = clock();         //del!
-    qDebug() << (double)(finished-start) << " ms";  //del!
     return middle;
 }
 float Statistic::std_deviation()
 {
-         clock_t start = clock();      //del!
     average();
     dispersion();
     stdDev = sqrt(_dispersion);
-    clock_t finished = clock();         //del!
-    qDebug() << (double)(finished-start) << " ms";  //del!
     return stdDev;
 }
 float Statistic::filtered_std_deviation()
 {
-        clock_t start = clock();      //del!
     filteredAverage();
     f_dispersion();
     stdDev = sqrt(_dispersion);
@@ -70,7 +59,6 @@ float Statistic::filtered_std_deviation()
 void  Statistic::make_histogram()
 {
     emit Statistic::started();
-    clock_t start = clock();      //del!
     minimax();
     assert(num_of_intervals>1 && "num of intervals must be >1");
     if (!histogram->empty())
@@ -83,14 +71,11 @@ void  Statistic::make_histogram()
     {
         histogram_add(x);
     }
-    clock_t finished = clock();         //del!
-    qDebug() << (double)(finished-start) << " ms";  //del!
     emit Statistic::finished();
 }
 void  Statistic::filtered_histogram()
 {
     emit Statistic::started();
-    clock_t start = clock();      //del!
     assert(num_of_intervals>0 && "num of intervals must be >0");
     average();
     dispersion();
@@ -107,8 +92,6 @@ void  Statistic::filtered_histogram()
         if (x>=lower_bound && x<=upper_bound)      //add to histogram values in confident interval
             f_histogram_add(x);
     }
-    clock_t finished = clock();         //del!
-    qDebug() << (double)(finished-start) << " ms";  //del!
     emit Statistic::finished();
 }
 float Statistic::getBinWidth()
@@ -192,7 +175,6 @@ void Statistic::f_hist()                                    //fast version for f
     }
 }
 
-float Statistic::getMin() {return min;} //del!
 
 
 
