@@ -24,26 +24,29 @@ void fileRead(QString path,QList<qint32> *data)//test function, not optimized
     }
     file.close();
 }
-int main(int argc, char *argv[])                //test
+int main(int argc, char *argv[])               //test
 {
     QCoreApplication a(argc, argv);
-    QString p1 = QCoreApplication::applicationDirPath() + "/input.txt";     //for small tests use input.txt
-    //QString p2 = QCoreApplication::applicationDirPath() + "/output.txt";
+    QString p1 = QCoreApplication::applicationDirPath() + "/pings.txt";     //for small tests use input.txt[28]
+    //QString p2 = QCoreApplication::applicationDirPath() + "/output.txt";  //          or pings_1000.txt[1000]
     QList<qint32> data;
     fileRead(p1,&data);
+
     int num_of_bins{10};
     int num_of_sigmas{1};
     Statistic *stat = new Statistic(num_of_sigmas,num_of_bins, &data);
-    stat->make_histogram();
+
     qDebug() << "average: " << stat->average();
     qDebug() << "standard deviation: " << stat->std_deviation();
     for (int i=1;i<=num_of_bins;i++)
-    {
         qDebug()<< i << ": " << stat->histogram->at(i) << "\n";
-    }
+
     stat->filtered_histogram();
     qDebug() << "filtered average: " << stat->filteredAverage();
     qDebug() << "filtered std deviation: " << stat->filtered_std_deviation();
+    for (int i=1;i<=num_of_bins;i++)
+        qDebug()<< i << ": " << stat->histogram->at(i);
+
     delete stat;
     return a.exec();
 }

@@ -7,7 +7,7 @@ class Statistic : public QObject
 {
     Q_OBJECT
 public:
-    Statistic(qint32, qint32, QList<qint32>*);
+    Statistic(qint32, qint32, QList< qint32>*const);
                                         //1 arg - num of sigmas for confidence interval[1..3](filtration)
                                         //2 arg - num of bins(intervals) for histogram
                                         //3 arg - input data
@@ -33,7 +33,7 @@ private:
 
     qint32 confidence_interval, num_of_intervals, temp, filtered_size;
     float min, max, middle, _dispersion, stdDev, bin_width = 0, lower_bound, upper_bound;
-    QList<qint32> *input;
+    QList<qint32> *const input;
     std::map<qint32,qint32>::iterator iter;
 
 signals:

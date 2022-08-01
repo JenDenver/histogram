@@ -1,8 +1,7 @@
 #include "statistic.h"
-
-
-Statistic::Statistic(qint32 conf, qint32 num, QList<qint32> *data):
-    confidence_interval(conf), num_of_intervals(num), input(data)
+#include <QDebug>
+Statistic::Statistic(qint32 conf, qint32 num, QList<qint32> *const data)
+                    :confidence_interval(conf), num_of_intervals(num), input(data)
 {
     assert(input!=nullptr && !(input->isEmpty()) && "empty input list");
     histogram = new std::map<qint32,qint32>();
@@ -27,6 +26,7 @@ float Statistic::filteredAverage()
 {
     average();
     dispersion();
+    assert(_dispersion>=0 && "dispertion <0");
     stdDev = sqrt(_dispersion);
     findConfInterval();
     middle = 0; filtered_size = 0;
@@ -46,6 +46,7 @@ float Statistic::std_deviation()
 {
     average();
     dispersion();
+    assert(_dispersion>=0 && "dispertion <0");
     stdDev = sqrt(_dispersion);
     return stdDev;
 }
@@ -53,25 +54,29 @@ float Statistic::filtered_std_deviation()
 {
     filteredAverage();
     f_dispersion();
+    assert(_dispersion>=0 && "dispertion <0");
     stdDev = sqrt(_dispersion);
     return stdDev;
 }
 void  Statistic::make_histogram()
 {
+
     emit Statistic::started();
+    clock_t start = clock();
     minimax();
     assert(num_of_intervals>1 && "num of intervals must be >1");
     if (!histogram->empty())
         histogram->clear();
     for (int i=1;i<=num_of_intervals;i++)          //prepare map
         histogram->operator[](i)=0;
-    bin_width = (max-min)/num_of_intervals;
+    bin_width = (max-min)/num_of_intervals;        //calculate histogram bin width
     assert(bin_width>0 && "bin width <=0");
     for (auto x:*input)
     {
         histogram_add(x);
     }
-    emit Statistic::finished();
+    clock_t fin = clock();
+    qDebug() << "time hist: " << (double)(fin-start);
 }
 void  Statistic::filtered_histogram()
 {
@@ -79,6 +84,7 @@ void  Statistic::filtered_histogram()
     assert(num_of_intervals>0 && "num of intervals must be >0");
     average();
     dispersion();
+    assert(_dispersion>=0 && "dispertion <0");
     stdDev = sqrt(_dispersion);
     findConfInterval();                            //find bounds
     if (!histogram->empty())
@@ -159,7 +165,7 @@ void Statistic::f_dispersion()
     assert(filtered_size>0 && "nothing in confidence interval");
     _dispersion /= filtered_size-1;
 }
-void Statistic::f_hist()                                    //fast version for filtered histogram
+void Statistic::f_hist()                           //fast version for filtered histogram
 {
     assert(num_of_intervals>0 && "num of intervals must be >0");
     if (!histogram->empty())
