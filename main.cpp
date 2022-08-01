@@ -3,18 +3,8 @@
 #include "statistic.h"
 #include <iomanip>
 #include <QTime>
-void drawHistogram(Statistic *s) //test function, not optimized
-{
-    float low{s->getMin()}, up{low+s->getBinWidth()};
-    for(auto iter = s->histogram->begin(); iter != s->histogram->end(); ++iter)
-    {
-        qDebug() << QString::number(low, 'f', 2) << "--" << QString::number(up, 'f', 2) << ": " <<
-                    QString(iter->second, QChar('#'));
-        low = up;
-        up+=s->getBinWidth();
-    }
-}
-void HistToFile(QString path, Statistic *s) //test function, not optimized
+
+void HistToFile(QString path, Statistic *s) //test function, only for small inputs
 {
     QFile file(path);
     assert(file.open(QIODevice::WriteOnly | QIODevice::Text));
@@ -33,6 +23,7 @@ void HistToFile(QString path, Statistic *s) //test function, not optimized
 }
 void fileRead(QString path,QList<qint32> *data)//test function, not optimized
 {
+    assert(data!=nullptr);
     QFile file(path);
     assert(file.open(QIODevice::ReadOnly));
     QTextStream stream(&file);
@@ -49,22 +40,25 @@ void fileRead(QString path,QList<qint32> *data)//test function, not optimized
     }
     file.close();
 }
-int main(int argc, char *argv[])
+int main(int argc, char *argv[])                //test
 {
     QCoreApplication a(argc, argv);
     QString p1 = QCoreApplication::applicationDirPath() + "/pings.txt";
-    QString p2 = QCoreApplication::applicationDirPath() + "/output.txt";
+    //QString p2 = QCoreApplication::applicationDirPath() + "/output.txt";
     QList<qint32> data;
     fileRead(p1,&data);
     int num_of_bins{10};
-    Statistic *stat = new Statistic(&data,2,num_of_bins);
-    qDebug() << stat->getMiddle() <<  stat->getStdDeviation() << "\n";
-    for (int i=1;i<=num_of_bins;i++)
+    int num_of_sigmas{1};
+    Statistic *stat = new Statistic(num_of_sigmas,num_of_bins, &data);
+    qDebug() << "avg";
+    for (int i=0;i<50;i++)
+        stat->average();
+    /*for (int i=1;i<=num_of_bins;i++)
     {
         qDebug()<< i << ": " << stat->histogram->at(i) << "\n";
     }
-    HistToFile(p2, stat);
-    //drawHistogram(stat);
+    HistToFile(p2, stat);*/
+
     delete stat;
     return a.exec();
 }

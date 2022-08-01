@@ -1,209 +1,81 @@
 #include "statistic.h"
 #include <QDebug>       //del!
-#include <QTime>           //del!
-Statistic::Statistic(QList<qint32> *data, qint32 conf, qint32 num):
-    input(data), confidence_interval(conf), num_of_intervals(num)
-{                                                         //confidence_interval = num of sigmas(1-3)
+#include <QTime>        //del!
+
+Statistic::Statistic(qint32 conf, qint32 num, QList<qint32> *data):
+    confidence_interval(conf), num_of_intervals(num), input(data)
+{
+    assert(input!=nullptr && !(input->isEmpty()) && "empty input list");
     histogram = new std::map<qint32,qint32>();
-    make_histogram();
 }
 Statistic::~Statistic()
 {
     delete histogram;
 }
-/*int Statistic::make_histogram()
+
+//public methods
+float Statistic::average()
 {
-    emit started();
-    clock_t start = clock();      //del!
-    middle=0; dispersion=0; std_deviation=0;
-    size = input->size();
-    assert(num_of_intervals>0 && "num of intervals must be >0");
-    if (input==nullptr || input->isEmpty())
-        return 1;
-    else
-    {
-        //step 1: find min, max, middle
-        min = input->first();                             //prepare min and max vars
-        max = input->first();
-        for (auto x:*input)
-        {
-            middle+=x;                                    //accumulating middle
-            if (x<min) min = x;                           //find maximum value
-            if (x>max) max = x;                           //find minimum value
-        }
-        middle /= size;                                   //find middle value
-
-        //step 2: build histogram, find dispersion
-        for (int i=1;i<=num_of_intervals;i++)             //preparing map
-            histogram->operator[](i)=0;
-        bin_width = (max-min)/num_of_intervals;
-        assert(bin_width>0 && "bin width <=0");
-        for (auto x:*input)
-        {
-            dispersion += (x-middle)*(x-middle);          //accumulating dispersion
-            histogram_add(x);                             //add element in histogram
-        }
-        assert(size>1 && "input size <=1");
-        dispersion /= size-1;                             //find dispersion
-
-        //step 3:find standard deviation and confidence interval
-        std_deviation = sqrt(dispersion);
-        assert(confidence_interval>0 && confidence_interval<4);
-        lower_bound = middle - confidence_interval*std_deviation;      //3-sigma rule
-        upper_bound = middle + confidence_interval*std_deviation;
-
-        //step 4: find middle for filtered interval
-        middle = 0; filtered_size = 0;
-        for (auto x:*input)
-        {
-            if (x>=lower_bound && x<=upper_bound)
-            {
-                middle+=x;
-                filtered_size++;                          //count ammount of elements in condfidence interval
-            }
-        }
-        middle/=filtered_size;
-
-        //step 5: find dispersion for filtered interval
-        dispersion = 0;
-        for (auto x:*input)
-        {
-            if (x>=lower_bound && x<=upper_bound)
-                dispersion += (x-middle)*(x-middle);
-        }
-        dispersion /= filtered_size-1;
-
-        //step 6: find std_deviation for filtered interval
-        std_deviation = sqrt(dispersion);
-        clock_t fin = clock();       //del!
-        qDebug() << "seconds used: " << ((double)(fin-start)) / CLOCKS_PER_SEC; //del!
-    }
-    emit Statistic::finished();
-    return 0;
-}*/
-/*int Statistic::make_histogram()
-{
-    emit started();
-    clock_t start = clock();      //del!
-    middle=0; dispersion=0; std_deviation=0;
-    size = input->size();
-    assert(num_of_intervals>0 && "num of intervals must be >0");
-    if (input==nullptr || input->isEmpty())
-        return 1;
-    else
-    {
-        min = input->first();                             //prepare min and max vars
-        max = input->first();
-        for (auto x:*input)
-        {
-            if (x<min) min = x;                           //find maximum value
-            if (x>max) max = x;                           //find minimum value
-        }
-        for (auto x:*input)
-        {
-            middle+=x;
-        }
-        middle /= size;                                   //find middle value
-
-        for (int i=1;i<=num_of_intervals;i++)             //preparing map
-            histogram->operator[](i)=0;
-        bin_width = (max-min)/num_of_intervals;
-        assert(bin_width>0 && "bin width <=0");
-        for (auto x:*input)
-        {
-            histogram_add(x);
-        }
-        for (auto x:*input)
-        {
-            dispersion += (x-middle)*(x-middle);          //accumulating dispersion
-        }
-        assert(size>1 && "input size <=1");
-        dispersion /= size-1;                             //find dispersion
-
-        //step 3:find standard deviation and confidence interval
-        std_deviation = sqrt(dispersion);
-        assert(confidence_interval>0 && confidence_interval<4);
-        lower_bound = middle - confidence_interval*std_deviation;      //3-sigma rule
-        upper_bound = middle + confidence_interval*std_deviation;
-
-        //step 4: find middle for filtered interval
-        middle = 0; filtered_size = 0;
-        for (auto x:*input)
-        {
-            if (x>=lower_bound && x<=upper_bound)
-            {
-                middle+=x;
-                filtered_size++;                          //count ammount of elements in condfidence interval
-            }
-        }
-        middle/=filtered_size;
-
-        //step 5: find dispersion for filtered interval
-        dispersion = 0;
-        for (auto x:*input)
-        {
-            if (x>=lower_bound && x<=upper_bound)
-                dispersion += (x-middle)*(x-middle);
-        }
-        dispersion /= filtered_size-1;
-
-        //step 6: find std_deviation for filtered interval
-        std_deviation = sqrt(dispersion);
-        clock_t fin = clock();       //del!
-        qDebug() << "seconds used: " << ((double)(fin-start)) / CLOCKS_PER_SEC; //del!
-    }
-    emit Statistic::finished();
-    return 0;
-}*/
-int Statistic::make_histogram()
-{
-    emit started();
-    clock_t start = clock();      //del!
-    assert(num_of_intervals>0 && "num of intervals must be >0");
-    if (input==nullptr || input->isEmpty())
-        return 1;
-    else
-    {
-        minimax();
-        _middle();
-        hist();
-        disp();
-        stdDev();
-        findConfInterval();
-        _middle(lower_bound, upper_bound);
-        disp(lower_bound, upper_bound);
-        stdDev();
-        clock_t fin = clock();       //del!
-        qDebug() << "seconds used: " << ((double)(fin-start)) / CLOCKS_PER_SEC; //del!
-    }
-    emit Statistic::finished();
-    return 0;
-}
-void Statistic::minimax()
-{
-    min = input->first();                             //prepare min and max vars
-    max = input->first();
-    for (auto x:*input)
-    {
-        if (x<min) min = x;                           //find maximum value
-        if (x>max) max = x;                           //find minimum value
-    }
-}
-void Statistic::_middle()
-{
+            clock_t start = clock();      //del!
     middle=0;
-    size = input->size();
     for (auto x:*input)
     {
         middle+=x;
     }
-    middle /= size;
+    middle /= input->size();
+    clock_t finished = clock();         //del!
+    qDebug() << (double)(finished-start) << " ms";  //del!
+    return middle;
 }
-void Statistic::hist()
+float Statistic::filteredAverage()
 {
+        clock_t start = clock();      //del!
+    average();
+    dispersion();
+    stdDev = sqrt(_dispersion);
+    findConfInterval();
+    middle = 0; filtered_size = 0;
+    for (auto x:*input)
+    {
+        if (x>=lower_bound && x<=upper_bound)
+        {
+            middle+=x;
+            ++filtered_size;
+        }
+    }
+    assert(filtered_size>0 && "nothing in confidence interval");
+    middle/=filtered_size;
+    clock_t finished = clock();         //del!
+    qDebug() << (double)(finished-start) << " ms";  //del!
+    return middle;
+}
+float Statistic::std_deviation()
+{
+         clock_t start = clock();      //del!
+    average();
+    dispersion();
+    stdDev = sqrt(_dispersion);
+    clock_t finished = clock();         //del!
+    qDebug() << (double)(finished-start) << " ms";  //del!
+    return stdDev;
+}
+float Statistic::filtered_std_deviation()
+{
+        clock_t start = clock();      //del!
+    filteredAverage();
+    f_dispersion();
+    stdDev = sqrt(_dispersion);
+    return stdDev;
+}
+void  Statistic::make_histogram()
+{
+    emit Statistic::started();
+    clock_t start = clock();      //del!
+    minimax();
+    assert(num_of_intervals>1 && "num of intervals must be >1");
     if (!histogram->empty())
         histogram->clear();
-    for (int i=1;i<=num_of_intervals;i++)
+    for (int i=1;i<=num_of_intervals;i++)          //prepare map
         histogram->operator[](i)=0;
     bin_width = (max-min)/num_of_intervals;
     assert(bin_width>0 && "bin width <=0");
@@ -211,67 +83,120 @@ void Statistic::hist()
     {
         histogram_add(x);
     }
+    clock_t finished = clock();         //del!
+    qDebug() << (double)(finished-start) << " ms";  //del!
+    emit Statistic::finished();
 }
-void Statistic::disp()
+void  Statistic::filtered_histogram()
 {
-    dispersion=0;
+    emit Statistic::started();
+    clock_t start = clock();      //del!
+    assert(num_of_intervals>0 && "num of intervals must be >0");
+    average();
+    dispersion();
+    stdDev = sqrt(_dispersion);
+    findConfInterval();                            //find bounds
+    if (!histogram->empty())
+        histogram->clear();
+    for (int i=1;i<=num_of_intervals;i++)          //prepare map
+        histogram->operator[](i)=0;
+    bin_width = (upper_bound-lower_bound)/num_of_intervals;
+    assert(bin_width>0 && "bin width <=0");
     for (auto x:*input)
     {
-        dispersion += (x-middle)*(x-middle);          //accumulating dispersion
+        if (x>=lower_bound && x<=upper_bound)      //add to histogram values in confident interval
+            f_histogram_add(x);
     }
-    assert(size>1 && "input size <=1");
-    dispersion /= size-1;
-
+    clock_t finished = clock();         //del!
+    qDebug() << (double)(finished-start) << " ms";  //del!
+    emit Statistic::finished();
 }
-void Statistic::stdDev()
+float Statistic::getBinWidth()
 {
-    std_deviation = sqrt(dispersion);
+    return bin_width;
+}
+
+//private methods
+void Statistic::minimax()
+{
+    min = input->first();
+    max = input->first();
+    for (auto x:*input)
+    {
+        if (x<min) min = x;
+        if (x>max) max = x;
+    }
 }
 void Statistic::findConfInterval()
 {
-    assert(confidence_interval>0 && confidence_interval<4);
-    lower_bound = middle - confidence_interval*std_deviation;      //3-sigma rule
-    upper_bound = middle + confidence_interval*std_deviation;
+    assert(confidence_interval>0 && confidence_interval<4 && "conf. interval must be [1..3]");
+    lower_bound = middle - confidence_interval*stdDev;      //3-sigma rule
+    upper_bound = middle + confidence_interval*stdDev;
 }
-void Statistic::_middle(float low, float up)
-{
-    middle = 0; filtered_size = 0;
-    for (auto x:*input)
-    {
-        if (x>=low && x<=up)
-        {
-            middle+=x;
-            filtered_size++;
-        }
-    }
-    assert(filtered_size>0 && "nothing in confidence interval");
-    middle/=filtered_size;
-}
-void Statistic::disp(float low, float up)
-{
-    dispersion = 0;
-    for (auto x:*input)
-    {
-        if (x>=low && x<=up)
-            dispersion += (x-middle)*(x-middle);
-    }
-    assert(filtered_size>0 && "nothing in confidence interval");
-    dispersion /= filtered_size-1;
-}
-
 void Statistic::histogram_add(qint32 x)
 {
     temp = static_cast<int>(floor((x-min)/bin_width))+1;    // find num of bin for element
     if (temp > num_of_intervals)
-        temp=num_of_intervals;
+        temp=num_of_intervals;                              //fix for last number
     ++histogram->operator[](temp);
 
     //for some reason in qtCreator next line don't work
     //++histogram[temp]
     //works in VS
 }
-float Statistic::getMiddle() {return middle;}
-float Statistic::getStdDeviation() {return std_deviation;}
-float Statistic::getBinWidth() {return bin_width;}
-float Statistic::getMax(){return max;}
-float Statistic::getMin(){return min;}
+void Statistic::f_histogram_add(qint32 x)                   //version for filtered histogram
+{
+    temp = static_cast<int>(floor((x-lower_bound)/bin_width))+1;    // find num of bin for element
+    if (temp > num_of_intervals)
+        temp=num_of_intervals;                              //fix for last number
+    ++histogram->operator[](temp);
+
+    //for some reason in qtCreator next line don't work
+    //++histogram[temp]
+    //works in VS
+}
+void Statistic::dispersion()
+{
+    _dispersion=0;
+    for (auto x:*input)
+    {
+        _dispersion += (x-middle)*(x-middle);
+    }
+    assert(input->size()>1 && "input size <=1");
+    _dispersion /= input->size()-1;
+}
+void Statistic::f_dispersion()
+{
+    _dispersion = 0;
+    for (auto x:*input)
+    {
+        if (x>=lower_bound && x<=upper_bound)
+            _dispersion += (x-middle)*(x-middle);
+    }
+    assert(filtered_size>0 && "nothing in confidence interval");
+    _dispersion /= filtered_size-1;
+}
+void Statistic::f_hist()                                    //fast version for filtered histogram
+{
+    assert(num_of_intervals>0 && "num of intervals must be >0");
+    if (!histogram->empty())
+        histogram->clear();
+    for (int i=1;i<=num_of_intervals;i++)          //prepare map
+        histogram->operator[](i)=0;
+    bin_width = (upper_bound-lower_bound)/num_of_intervals;
+    assert(bin_width>0 && "bin width <=0");
+    for (auto x:*input)
+    {
+        if (x>=lower_bound && x<=upper_bound)      //add to histogram values in confident interval
+            f_histogram_add(x);
+    }
+}
+
+float Statistic::getMin() {return min;} //del!
+
+
+
+
+
+
+

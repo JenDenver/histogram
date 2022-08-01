@@ -7,31 +7,36 @@ class Statistic : public QObject
 {
     Q_OBJECT
 public:
-    Statistic(QList<qint32>*,qint32, qint32);
+    Statistic(qint32, qint32, QList<qint32>*);
+                                        //1 arg - num of sigmas for confidence interval[1..3](filtration)
+                                        //2 arg - num of bins(intervals) for histogram
+                                        //3 arg - input data
     ~Statistic();
-    int make_histogram();
-    float getMiddle();
-    float getStdDeviation();
-    float getBinWidth(); //
-    float getMin();     //  debug
-    float getMax();        //
-    std::map<qint32,qint32> *histogram;
+    std::map<qint32,qint32> *histogram; //store histogram
+
+    float average();                    //find average
+    float filteredAverage();            //filter input and find average
+    float std_deviation();              //stdDev for input
+    float filtered_std_deviation();     //stdDev for filtered input
+    void  make_histogram();             //build histogram from input
+    void  filtered_histogram();         //filter input, then build histogram
+    float getBinWidth();                //default binwidth = 0
+
+    float getMin(); //del!
+
 private:
-    void minimax();
-    void _middle();
-    void hist();
-    void disp();
-    void stdDev();
-    void _middle(float, float);
-    void disp(float, float);
-    void findConfInterval();
-    void hist(float, float);
+    void minimax();                     //find min and max
+    void findConfInterval();            //find confidence interval
+    void histogram_add(qint32);         //for building histogram
+    void f_histogram_add(qint32);       //for building filtered histogram
+    void dispersion();                  //for internal use, call after average()
+    void f_dispersion();                //for internal use, call after filteredAverage()
+    void f_hist();                      //for internal use, call after average, dispersion, findConfInt
+
+    qint32 confidence_interval, num_of_intervals, temp, filtered_size;
+    float min, max, middle, _dispersion, stdDev, bin_width = 0, lower_bound, upper_bound;
     QList<qint32> *input;
-    float min, max, middle, dispersion, std_deviation, bin_width, lower_bound, upper_bound;
-    qint32 confidence_interval, temp, size, filtered_size;
-    const qint32 num_of_intervals;
     std::map<qint32,qint32>::iterator iter;
-    void histogram_add(qint32);
 
 signals:
     void started();
